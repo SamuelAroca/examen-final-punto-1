@@ -1,11 +1,14 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
-import { ProgressBar, Table } from "react-bootstrap";
+import { Pagination, ProgressBar, Table } from "react-bootstrap";
 
 const TablePagination = () => {
   const [empleados, setEmpleados] = useState([]);
+  const [paginaActual, setPaginaActual] = useState(1);
+  const empleadosPorPagina = 10;
 
-  const url = "http://89.116.25.43:3500/api/empleados/listar";
+  /* const url = import.meta.env.VITE_API_URL; */
+  const url = "http://89.116.25.43:3500/api/empleados/listar"
 
   const getApi = async () => {
     const response = await axios.get(url);
@@ -21,10 +24,23 @@ const TablePagination = () => {
     return estado ? "green" : "red";
   };
 
+  const indexOfLastEmpleado = paginaActual * empleadosPorPagina;
+  const indexOfFirstEmpleado = indexOfLastEmpleado - empleadosPorPagina;
+  const currentEmpleados = empleados.slice(
+    indexOfFirstEmpleado,
+    indexOfLastEmpleado
+  );
+
+  const handlePageChange = (pageNumber) => {
+    setPaginaActual(pageNumber);
+  };
+
+  const totalPages = Math.ceil(empleados.length / empleadosPorPagina);
+
   return (
     <>
       <h1>Tabla de Empleados</h1>
-      <Table striped bordered hover>
+      <Table striped bordered hover variant="dark">
         <thead>
           <tr>
             <th>#</th>
@@ -37,7 +53,7 @@ const TablePagination = () => {
           </tr>
         </thead>
         <tbody>
-          {empleados?.map((item, index) => {
+          {currentEmpleados?.map((item, index) => {
             return (
               <tr key={item.id}>
                 <td>{index + 1}</td>
@@ -59,6 +75,25 @@ const TablePagination = () => {
           })}
         </tbody>
       </Table>
+      <Pagination>
+        <Pagination.Prev
+          onClick={() => handlePageChange(paginaActual - 1)}
+          disabled={paginaActual === 1}
+        />
+        {Array.from({ length: totalPages }).map((_, index) => (
+          <Pagination.Item
+            key={index + 1}
+            active={index + 1 === paginaActual}
+            onClick={() => handlePageChange(index + 1)}
+          >
+            {index + 1}
+          </Pagination.Item>
+        ))}
+        <Pagination.Next
+          onClick={() => handlePageChange(paginaActual + 1)}
+          disabled={paginaActual === totalPages}
+        />
+      </Pagination>
     </>
   );
 };
